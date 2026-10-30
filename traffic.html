@@ -1,12 +1,132 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1726"><title>Airport Traffic</title>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta name="theme-color" content="#0b1726"><title>Airport Traffic</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#091523;color:#e9f2ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}header{background:#0b1929;padding:16px;border-bottom:1px solid #30465d}a{color:#79e7d0}h1{font-size:21px;margin:8px 0}main{max-width:900px;margin:auto;padding:14px}.panel{padding:15px;background:#14273b;border:1px solid #34516a;border-radius:15px;margin-bottom:13px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{font-size:13px;color:#c3d7e9}input,select{display:block;width:100%;background:#091b2c;border:1px solid #58718b;border-radius:8px;padding:10px;color:white;font-size:16px;margin-top:5px}button{padding:11px 16px;background:#1d756d;border:1px solid #66d9bf;border-radius:9px;color:white;font-size:15px;margin-top:12px}.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:14px}td,th{padding:9px 7px;text-align:left;border-bottom:1px solid #30465d}th{font-size:12px;color:#b2c9df}.arr{color:#79e7d0}.dep{color:#9cc4ff}.late{color:#ffb47c;font-weight:600}.target{background:#235059}.muted{color:#a9bdd2}.note{color:#e6c98e;font-size:12px;line-height:1.7}.meta{font-size:12px;color:#a9bdd2}summary{cursor:pointer;color:#79e7d0}code{overflow-wrap:anywhere}@media(max-width:450px){main{padding:8px}td,th{padding:7px 4px;font-size:12px}}@media print{header a,.noprint,details,button{display:none!important}body,.panel{background:white;color:black}.panel{border:1px solid #888;break-inside:avoid}.meta,.muted{color:#555!important}td,th{color:black!important;border-color:#777}}
-.trafficgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.trafficbox{min-width:0;overflow-x:auto}.trafficbox h3{font-size:14px;color:#a9e9e0}.trafficbox td{font-size:12px}.trafficbox th{font-size:11px}@media(max-width:580px){.trafficgrid{grid-template-columns:1fr}} </style></head><body><header><a href="./index.html">‹ B738 Flight Computer に戻る</a><h1>✈ Airport Traffic</h1><div class="meta">便名で自動検索 / 出発・到着の前後30分 / JST</div></header><main>
+.trafficgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.trafficbox{min-width:0;overflow-x:auto}.trafficbox h3{font-size:14px;color:#a9e9e0}.trafficbox td{font-size:12px}.trafficbox th{font-size:11px}@media(max-width:580px){.trafficgrid{grid-template-columns:1fr}} 
+h2{font-size:18px}.remember{display:flex;gap:8px;align-items:center;margin-top:12px}.remember input{display:inline-block;width:auto;margin:0;min-width:20px;min-height:20px}button:disabled{opacity:.55;cursor:wait}#odptStatus{margin-top:12px;overflow-wrap:anywhere}#coverage{line-height:1.7;margin:12px 0;overflow-wrap:anywhere}.trafficbox table{white-space:normal}.trafficbox td:nth-child(1),.trafficbox td:nth-child(2){white-space:nowrap;vertical-align:top}.trafficbox td:nth-child(3){line-height:1.8;overflow-wrap:anywhere}.jal{color:#ffa9ae}.ana{color:#a7c9ff}.own{color:#a5f0b7;font-weight:700}.flightnote{display:inline;font-size:11px}.flightnote[open]{display:block}.flightnote summary{display:inline}.trafficbox small{font-size:10px;color:#c3d7e9}@media print{.jal{color:#a32030}.ana{color:#174a96}.own{color:#12602d}.target{background:#d8eedb!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}.flightnote{display:block!important}.flightnote summary{display:none}#coverage{font-size:9px}.trafficgrid{grid-template-columns:1fr 1fr}.trafficbox td{font-size:9px;padding:4px}.panel h2{font-size:14px}}
+</style></head><body><header><a href="./index.html">‹ B738 Flight Computer に戻る</a><h1>✈ Airport Traffic</h1><div class="meta">ODPT接続版 1.0 / 出発・到着の前後30分 / JST</div></header><main>
 <div class="panel noprint"><div class="grid"><label>日付<input id="date" type="date"></label><label>便名<input id="flight" placeholder="JAL431" autocapitalize="characters"></label><label>表示幅<select id="range"><option value="30" selected>前後30分</option><option value="60">前後1時間</option><option value="120">前後2時間</option></select></label></div><button id="search">検索 / 再表示</button> <button id="print">印刷・PDF保存</button><div id="status" class="meta"></div></div>
+<section class="panel noprint" aria-labelledby="odptTitle">
+<h2 id="odptTitle">ODPTの接続設定</h2>
+<p class="meta">①トークンを入力 → ②「ODPTから取得・更新」 → ③日付と便名で検索</p>
+<label>ODPTセンター用アクセストークン<input id="odptToken" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ここに貼り付け（文字は非表示）"></label>
+<label class="remember"><input id="rememberToken" type="checkbox"> このSafariにトークンを保存する（自分の端末用）</label>
+<button id="odptFetch">ODPTから取得・更新</button> <button id="forgetToken">トークンを消去</button>
+<div id="odptStatus" class="meta" role="status" aria-live="polite">トークンはODPTへの接続に使用します。GitHubへは保存しません。</div>
+<p class="note">収録される航空会社・便はODPTの提供範囲に限ります。全社・全便を網羅するものではありません。国内線の定刻を表示します。便の注記にある時刻変更等は自動補正しないため、注記も確認してください。</p>
+<p class="meta">データ提供：公共交通オープンデータセンター・各提供事業者 / <a href="https://ckan.odpt.org/" target="_blank" rel="noopener noreferrer">提供データと利用条件</a></p>
+</section>
+<div id="coverage" class="meta" aria-live="polite"></div>
 <div id="results"></div>
-<div class="panel noprint"><details><summary>時刻表CSVの読み込み（地上で実施）</summary><p class="note">日付と便名から出発・到着空港を検索します。国内線の全社時刻表の自動取得は未接続。実際の時刻表CSVを読み込んだ場合にだけ便を表示します。データは端末内に保存できます。</p><input id="file" type="file" accept=".csv,text/csv"><button id="clear">端末保存データを削除</button><p class="note">CSVヘッダー：<code>date,airport,flight,type,scheduled,estimated,origin,destination</code>。dateはYYYY-MM-DD、typeはARR/DEP、時刻はJSTのHH:MM。estimatedが不明なら空欄。空港ICAOコードを指定。<code>traffic-data.csv</code>をGitHubに追加するとCSV未保存の端末で自動読込できます。</p></details></div>
-<div class="note noprint">時刻表未接続時は便を表示できません。参考表示のみ。実運航の判断、管制情報や運航資料の代用不可。定刻・遅延情報の更新状況はCSVの提供元で確認してください。空港マスタは国内の主要民間空港と一部飛行場の暫定収録です。</div></main>
+<div class="panel noprint"><details><summary>時刻表CSVの読み込み（地上で実施）</summary><p class="note">日付と便名から出発・到着空港を検索します。ODPT接続に加え、手元の時刻表CSVも読み込めます。データは端末内に保存できます。</p><input id="file" type="file" accept=".csv,text/csv"><button id="clear">端末保存データを削除</button><p class="note">CSVヘッダー：<code>date,airport,flight,type,scheduled,estimated,origin,destination</code>。dateはYYYY-MM-DD、typeはARR/DEP、時刻はJSTのHH:MM。estimatedが不明なら空欄。空港ICAOコードを指定。<code>traffic-data.csv</code>をGitHubに追加するとCSV未保存の端末で自動読込できます。</p></details></div>
+<div class="note noprint">時刻表未接続時は便を表示できません。参考表示のみ。実運航の判断、管制情報や運航資料の代用不可。ODPTは定刻のみ取得します。遅延欄はCSVに情報がある場合のみ表示します。空港マスタは国内の主要民間空港と一部飛行場の暫定収録です。</div></main>
+<script>
+(function(root,factory){
+  const api=factory();
+  if(typeof module==='object'&&module.exports)module.exports=api;
+  else root.ODPTTraffic=api;
+})(typeof globalThis!=='undefined'?globalThis:this,function(){
+  'use strict';
+  const airportMap={HND:'RJTT',NRT:'RJAA',ITM:'RJOO',KIX:'RJBB',UKB:'RJBE',CTS:'RJCC',OKD:'RJCO',FUK:'RJFF',KKJ:'RJFR',UBJ:'RJDC',NGS:'RJFU',HSG:'RJFS',MYJ:'RJOM',OKA:'ROAH',NGO:'RJGG',NKM:'RJNA',KOJ:'RJFK',KMI:'RJFM',OIT:'RJFO',KMJ:'RJFT',HIJ:'RJOA',TAK:'RJOT',KCZ:'RJOK',TKS:'RJOS',IZO:'RJOC',AOJ:'RJSA',AKJ:'RJEC',HKD:'RJCH',MMB:'RJCM',KUH:'RJCK',OBO:'RJCB',SHB:'RJCN',FSZ:'RJNS',KIJ:'RJSN',TOY:'RJNT',KMQ:'RJNK',OKJ:'RJOB',YGJ:'RJOH',TTJ:'RJOR',IWK:'RJOI',IWJ:'RJOW',SDJ:'RJSS',GAJ:'RJSC',HNA:'RJSI',AXT:'RJSK',MSJ:'RJSM',ONJ:'RJSR',SYO:'RJSY',FKS:'RJSF',NTQ:'RJNW',WKJ:'RJCW',MBE:'RJEB',RIS:'RJER',OIR:'RJEO',ISG:'ROIG',MMY:'ROMY',SHI:'RORS',ASJ:'RJKA',TNE:'RJFG',KUM:'RJFC',MMD:'ROMD',KTD:'RORK',UEO:'ROKJ',TRA:'RORT',OGN:'ROYN',OIM:'RJTO',HAC:'RJTH',MYE:'RJTQ',KJP:'ROKR',OKI:'RJNO',TJH:'RJBT',SHM:'RJBD',MMJ:'RJAF',IBR:'RJAH',AXJ:'RJDA',FUJ:'RJFE',IKI:'RJDB',TSJ:'RJDT',KKX:'RJKI',TKN:'RJKN',OKE:'RJKB',RNJ:'RORY',AGJ:'RORA'};
+  const jstDateFormat=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'});
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  function code(value){return String(value||'').split(':').pop();}
+  function airport(value){const c=code(value).toUpperCase();return airportMap[c]||(/^RJ[A-Z]{2}$|^RO[A-Z]{2}$/.test(c)?c:'');}
+  function flight(value,operator){
+    let s=String(value||'').toUpperCase().replace(/\s/g,'');
+    const aliases={NH:'ANA',JL:'JAL',BC:'SKY','7G':'SFJ','6J':'SNA',HD:'ADO',FW:'IBX',EH:'AKX',GK:'JJP',MM:'APJ',JQ:'JST',NU:'JTA',JC:'JAC',XM:'JEX',RAC:'RAC'};
+    const m=s.match(/^([A-Z0-9]{2,3}?)(\d+)$/);
+    if(m)return (aliases[m[1]]||m[1])+String(Number(m[2]));
+    if(/^\d+$/.test(s)&&operator)return code(operator).toUpperCase()+String(Number(s));
+    return s;
+  }
+  function addDays(date,n){const d=new Date(date+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
+  function validDate(d){if(!/^\d{4}-\d{2}-\d{2}$/.test(d||''))return false;const x=new Date(d+'T00:00:00Z');return Number.isFinite(x.getTime())&&x.toISOString().slice(0,10)===d;}
+  function clock(v){const s=String(v||'');return /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(s)?s:'';}
+  function note(v){if(typeof v==='string')return v;if(v&&typeof v==='object')return v.ja||v.en||Object.values(v).filter(x=>typeof x==='string').join(' / ');return '';}
+  function calendarMatch(value,date,unknown){
+    if(value==null||value==='')return true;
+    if(Array.isArray(value))return value.some(v=>calendarMatch(v,date,unknown));
+    const c=code(value),dow=new Date(date+'T12:00:00+09:00').getUTCDay();
+    if(days.includes(c))return days[dow]===c;
+    if(['Daily','Everyday','EveryDay','AllDays'].includes(c))return true;
+    // Holiday-dependent calendars cannot be resolved from weekday alone.
+    unknown.add(c);return false;
+  }
+  function dateMatch(obj,date){
+    const boundary=value=>{
+      const s=String(value||'');
+      if(!s)return '';
+      if(validDate(s))return s;
+      const d=new Date(s);
+      return Number.isFinite(d.getTime())?jstDateFormat.format(d):s.slice(0,10);
+    };
+    const from=boundary(obj['odpt:isValidFrom']),to=boundary(obj['odpt:isValidTo']);
+    return (!from||date>=from)&&(!to||date<=to);
+  }
+  function normalize(objects,date){
+    if(!Array.isArray(objects))throw Error('ODPTの応答がJSON配列ではありません。');
+    if(!validDate(date))throw Error('日付を指定してください。');
+    const rows=[],seen=new Map(),unknownCalendars=new Set(),operators=new Set(),updates=new Set();
+    let skipped=0,unknownAirports=0;
+    for(const obj of objects){
+      if(!obj||!Array.isArray(obj['odpt:flightScheduleObject']))continue;
+      const origin=airport(obj['odpt:originAirport']),destination=airport(obj['odpt:destinationAirport']);
+      if(!origin||!destination){unknownAirports++;continue;}
+      if(obj['dc:date'])updates.add(obj['dc:date']);
+      for(const serviceDate of [addDays(date,-1),date,addDays(date,1)]){
+        if(!dateMatch(obj,serviceDate)||!calendarMatch(obj['odpt:calendar'],serviceDate,unknownCalendars))continue;
+        for(const f of obj['odpt:flightScheduleObject']){
+          if(!dateMatch(f,serviceDate)||!calendarMatch(f['odpt:calendar'],serviceDate,unknownCalendars))continue;
+          const dep=clock(f['odpt:originTime']),arr=clock(f['odpt:destinationTime']);
+          if(!dep||!arr){skipped++;continue;}
+          const depOffset=Number(f['odpt:originDayDifference']??0);
+          const arrOffset=Number(f['odpt:destinationDayDifference']??(arr<dep?depOffset+1:depOffset));
+          if(!Number.isInteger(depOffset)||!Number.isInteger(arrOffset)||Math.abs(depOffset)>1||Math.abs(arrOffset)>2){skipped++;continue;}
+          const departureDate=addDays(serviceDate,depOffset),arrivalDate=addDays(serviceDate,arrOffset);
+          const op=code(f['odpt:airline']||obj['odpt:operator']),nums=f['odpt:flightNumber'];
+          const flights=[...new Set((Array.isArray(nums)?nums:[nums]).filter(Boolean).map(n=>flight(n,op)))];
+          if(!flights.length){skipped++;continue;}
+          operators.add(op);
+          for(const [type,ap,time,eventDate] of [['DEP',origin,dep,departureDate],['ARR',destination,arr,arrivalDate]]){
+            if(eventDate<addDays(date,-1)||eventDate>addDays(date,1))continue;
+            for(const no of flights){
+              const key=[eventDate,ap,no,type,time,origin,destination].join('|');
+              const text=note(f['odpt:note'])||note(obj['odpt:note']);
+              const row={date:eventDate,serviceDate,departureDate,arrivalDate,airport:ap,flight:no,aliases:flights,type,scheduled:time,estimated:'',origin,destination,operator:op,note:text};
+              if(seen.has(key)){
+                const prev=seen.get(key);prev.aliases=[...new Set([...prev.aliases,...flights])];
+                if(!prev.note)prev.note=text;
+              }else{seen.set(key,row);rows.push(row);}
+            }
+          }
+        }
+      }
+    }
+    return {rows,meta:{date,operators:[...operators].sort(),updates:[...updates].sort(),unknownCalendars:[...unknownCalendars].sort(),skipped,unknownAirports,fetchedAt:new Date().toISOString()}};
+  }
+  async function download(token,fetcher){
+    if(!String(token||'').trim())throw Error('アクセストークンを入力してください。');
+    const url=new URL('https://api.odpt.org/api/v4/odpt:FlightSchedule.json');
+    url.searchParams.set('acl:consumerKey',String(token).trim());
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
+    try{
+      let response;
+      try{response=await (fetcher||fetch)(url.href,{signal:controller.signal,credentials:'omit',cache:'no-store',referrerPolicy:'no-referrer'});}
+      catch(e){throw Error(e&&e.name==='AbortError'?'取得が45秒でタイムアウトしました。通信を確認して再試行してください。':'ODPTに接続できません。通信状態またはブラウザからの接続制限を確認してください。');}
+      if(!response.ok){
+        const errors={400:'ODPTのリクエストが受け付けられませんでした。',401:'トークンを確認してください。',403:'トークンが無効、または時刻表の取得権限がありません。',404:'この接続先に時刻表がありません。',429:'ODPTの利用回数制限です。時間を置いて再試行してください。'};
+        throw Error((errors[response.status]||'ODPTが取得要求に応答できません。')+' (HTTP '+response.status+')');
+      }
+      let data;try{data=await response.json();}catch(e){throw Error('ODPTの応答をJSONとして読み込めませんでした。');}
+      if(!Array.isArray(data))throw Error('ODPTの応答形式が想定と異なります。');
+      return data;
+    }finally{clearTimeout(timer);}
+  }
+  return {airportMap,airport,flight,addDays,validDate,normalize,download};
+});
+
+</script>
 <script>
 'use strict';
 const $=id=>document.getElementById(id), KEY='traffic-csv-2026-v1';
@@ -14,24 +134,103 @@ const pairs={RJFR:'RJDC',RJDC:'RJFR',RJFU:'RJFS',RJFS:'RJFU'};
 const legacyNames={RJFR:'北九州',RJDC:'山口宇部',RJFU:'長崎',RJFS:'佐賀',RJTT:'羽田',RJAA:'成田',RJOO:'伊丹',RJBB:'関西',RJCC:'新千歳',RJFF:'福岡',ROAH:'那覇'};
 const iata={HND:'RJTT',NRT:'RJAA',KIX:'RJBB',ITM:'RJOO',UKB:'RJBE',CTS:'RJCC',FUK:'RJFF',KKJ:'RJFR',UBJ:'RJDC',NGS:'RJFU',HSG:'RJFS',OKA:'ROAH',NGO:'RJGG',KOJ:'RJFK',KMI:'RJFM',MYJ:'RJOM',HIJ:'RJOA',TAK:'RJOT',KCZ:'RJOK',OIT:'RJFO',KMJ:'RJFT',TKS:'RJOS',IZO:'RJOC',AOJ:'RJSA',AKJ:'RJEC',HKD:'RJCH',MMB:'RJCM',KUH:'RJCK',OBO:'RJCB',SHB:'RJCN',FSZ:'RJNS',KIJ:'RJSN',TOY:'RJNT',KMQ:'RJNK',OKJ:'RJOB',YGJ:'RJOH',TTJ:'RJOR',IWK:'RJOI',SDJ:'RJSS',GAJ:'RJSC',HNA:'RJSI',AXT:'RJSK',MSJ:'RJSM',ISG:'ROIG',MMY:'ROMY',SHI:'RORS',ASJ:'RJKA',TNE:'RJFG',KUM:'RJFC',MMD:'ROMD',UEO:'ROKJ',TRA:'RORT',OGN:'ROYN',OIM:'RJTO',HAC:'RJTH',MYE:'RJTQ',KJP:'ROKR'};
 const airportMaster={"RJAA": "成田", "RJAF": "松本", "RJAH": "茨城（百里）", "RJAN": "新島", "RJAZ": "神津島", "RJBB": "関西", "RJBD": "南紀白浜", "RJBE": "神戸", "RJBT": "但馬", "RJCB": "帯広", "RJCC": "新千歳", "RJCH": "函館", "RJCK": "釧路", "RJCM": "女満別", "RJCN": "中標津", "RJCO": "札幌丘珠", "RJCR": "礼文（休止）", "RJCW": "稚内", "RJDB": "壱岐", "RJDC": "山口宇部", "RJEB": "紋別", "RJEC": "旭川", "RJER": "利尻", "RJFC": "屋久島", "RJFE": "福江", "RJFF": "福岡", "RJFG": "種子島", "RJFK": "鹿児島", "RJFM": "宮崎", "RJFO": "大分", "RJFR": "北九州", "RJFS": "佐賀", "RJFT": "熊本", "RJFU": "長崎", "RJGG": "中部国際", "RJKA": "奄美", "RJKB": "沖永良部", "RJKI": "喜界", "RJKN": "徳之島", "RJNA": "名古屋", "RJNF": "福井", "RJNG": "岐阜", "RJNK": "小松", "RJNO": "隠岐", "RJNS": "静岡", "RJNT": "富山", "RJNW": "能登", "RJOA": "広島", "RJOB": "岡山", "RJOC": "出雲", "RJOH": "美保（米子）", "RJOI": "岩国", "RJOK": "高知", "RJOM": "松山", "RJOO": "伊丹", "RJOS": "徳島", "RJOT": "高松", "RJOR": "鳥取", "RJSA": "青森", "RJSC": "山形", "RJSI": "花巻", "RJSK": "秋田", "RJSM": "三沢", "RJSN": "新潟", "RJSR": "大館能代", "RJSS": "仙台", "RJSY": "庄内", "RJTA": "厚木", "RJTC": "立川", "RJTE": "館山", "RJTF": "調布", "RJTH": "八丈島", "RJTO": "大島", "RJTT": "羽田", "RJTY": "横田", "ROAH": "那覇", "ROIG": "新石垣", "ROKJ": "久米島", "ROMD": "南大東", "ROMY": "宮古", "RORK": "北大東", "RORS": "下地島", "RORT": "多良間", "RORY": "与論", "ROYN": "与那国", "RJAK": "霞ヶ浦", "RJAM": "南鳥島", "RJAW": "硫黄島", "RJBK": "岡南", "RJCA": "旭川（自衛隊）", "RJCJ": "千歳（自衛隊）", "RJCT": "十勝", "RJDA": "天草", "RJDK": "上五島", "RJDM": "目達原", "RJDO": "小値賀", "RJDT": "対馬", "RJDU": "大村", "RJEO": "奥尻", "RJFA": "芦屋", "RJFN": "新田原", "RJFY": "鹿屋", "RJFZ": "築城", "RJNH": "浜松", "RJNY": "静浜", "RJOE": "明野", "RJOF": "防府", "RJOW": "石見", "RJOY": "八尾", "RJOZ": "小月", "RJSD": "佐渡", "RJSF": "福島", "RJSH": "八戸", "RJSO": "大湊", "RJST": "松島", "RJSU": "霞の目", "RJTJ": "入間", "RJTK": "木更津", "RJTL": "下総", "RJTQ": "三宅島", "RJTU": "宇都宮", "RODN": "嘉手納", "ROKR": "慶良間", "RORA": "粟国", "RORE": "伊江島", "RORH": "波照間", "ROTM": "普天間"};
+Object.assign(iata,ODPTTraffic.airportMap);
 const norm=c=>{c=String(c||'').trim().toUpperCase();return iata[c]||c};
-let data=[], source='未読み込み';
+let data=[], source='未読み込み', odptRaw=null, odptMeta=null, odptFetchedAt=0, busy=false;
+const TOKEN_KEY='traffic-odpt-token-v1', ODPT_CACHE='traffic-odpt-cache-v1';
+const normalizeFlight=v=>ODPTTraffic.flight(v);
+function localGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function localRemove(k){try{localStorage.removeItem(k)}catch(e){}}
+function localSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
+function showTime(value){const d=new Date(value);return Number.isFinite(d.getTime())?d.toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',hour12:false}):'不明'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function csvRows(t){let rows=[],row=[],val='',q=false; t=t.replace(/^\uFEFF/,'');for(let i=0;i<t.length;i++){const c=t[i];if(c==='"'){if(q&&t[i+1]==='"'){val+='"';i++}else q=!q;}else if(c===','&&!q){row.push(val);val='';}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&t[i+1]==='\n')i++;row.push(val);if(row.some(x=>x.trim()))rows.push(row);row=[];val='';}else val+=c;}row.push(val);if(row.some(x=>x.trim()))rows.push(row);return rows;}
-function parse(t){let rr=csvRows(t);if(!rr.length)throw Error('CSVが空です');const head=rr.shift().map(x=>x.trim().toLowerCase());for(const k of ['date','airport','flight','type','scheduled'])if(!head.includes(k))throw Error('必須の列がありません: '+k);return rr.map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()]))).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x.date)&&/^(ARR|DEP)$/i.test(x.type)&&/^([01]\d|2[0-3]):[0-5]\d$/.test(x.scheduled)).map(x=>({date:x.date,airport:norm(x.airport),flight:x.flight.toUpperCase().replace(/\s/g,''),type:x.type.toUpperCase(),scheduled:x.scheduled,estimated:/^([01]\d|2[0-3]):[0-5]\d$/.test(x.estimated||'')?x.estimated:'',origin:norm(x.origin),destination:norm(x.destination)}));}
+function parse(t){let rr=csvRows(t);if(!rr.length)throw Error('CSVが空です');const head=rr.shift().map(x=>x.trim().toLowerCase());for(const k of ['date','airport','flight','type','scheduled'])if(!head.includes(k))throw Error('必須の列がありません: '+k);return rr.map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()]))).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x.date)&&/^(ARR|DEP)$/i.test(x.type)&&/^([01]\d|2[0-3]):[0-5]\d$/.test(x.scheduled)).map(x=>({date:x.date,airport:norm(x.airport),flight:normalizeFlight(x.flight),type:x.type.toUpperCase(),scheduled:x.scheduled,estimated:/^([01]\d|2[0-3]):[0-5]\d$/.test(x.estimated||'')?x.estimated:'',origin:norm(x.origin),destination:norm(x.destination)}));}
 function min(t){let a=t.split(':').map(Number);return a[0]*60+a[1];}
-function rowsFor(date,airport,type,base,range){return data.filter(r=>r.date===date&&r.airport===airport&&r.type===type&&Math.abs(min(r.scheduled)-base)<=range).sort((a,b)=>min(a.scheduled)-min(b.scheduled)||a.flight.localeCompare(b.flight));}
-function table(airport,type,base,date,range,chosen){const rr=rowsFor(date,airport,type,base,range),heading=(airportMaster[airport]||legacyNames[airport]||airport)+' '+airport+' '+type+' '+String(Math.floor(base/60)).padStart(2,'0')+':'+String(base%60).padStart(2,'0');let h='<div class="trafficbox"><h3>'+esc(heading)+'</h3><table><thead><tr><th>STD/STA</th><th>差</th><th>便名＝相手空港</th></tr></thead><tbody>';for(const r of rr){const delta=min(r.scheduled)-base;const other=(type==='DEP'?r.destination:r.origin);const selected=r.flight===chosen;h+='<tr'+(selected?' class="target"':'')+'><td>'+esc(r.scheduled)+'</td><td>'+esc(delta===0?'0':(delta>0?'+':'')+delta)+'</td><td>'+esc(r.flight)+'='+esc(other)+(selected?' ★':'')+'</td></tr>'}if(!rr.length)h+='<tr><td colspan="3" class="muted">この時間帯の登録便なし</td></tr>';return h+'</tbody></table></div>'}
-function render(){const date=$('date').value,flight=$('flight').value.trim().toUpperCase().replace(/\s/g,''),range=Number($('range').value);if(!flight){$('results').innerHTML='<div class="panel note">日付と便名を入力してください。</div>';return}const matches=data.filter(r=>r.date===date&&r.flight===flight);let dep=matches.find(r=>r.type==='DEP'),arr=matches.find(r=>r.type==='ARR');if(!dep&&!arr){$('results').innerHTML='<div class="panel note">'+esc(flight)+' は、この日の登録時刻表にありません。CSVが未登録の場合、検索はできません。</div>';$('status').textContent='データ：'+source+' / '+data.length+'件';return}
+function deltaMinutes(row,date,base){return Math.round((Date.parse(row.date+'T00:00:00Z')-Date.parse(date+'T00:00:00Z'))/60000)+min(row.scheduled)-base;}
+function rowsFor(date,airport,type,base,range){return data.filter(r=>r.airport===airport&&r.type===type&&Math.abs(deltaMinutes(r,date,base))<=range).sort((a,b)=>deltaMinutes(a,date,base)-deltaMinutes(b,date,base)||a.flight.localeCompare(b.flight));}
+function table(airport,type,base,date,range,chosen){
+ const rr=rowsFor(date,airport,type,base,range),heading=(airportMaster[airport]||airport)+' '+(type==='DEP'?'出発 DEP':'到着 ARR');
+ let h='<div class="trafficbox"><h3>'+esc(heading)+'</h3><table><thead><tr><th>'+(type==='DEP'?'STD':'STA')+'</th><th>差</th><th>便名 - '+(type==='DEP'?'行先':'出発地')+'</th></tr></thead><tbody>';
+ const groups=new Map(),physical=new Set();
+ for(const r of rr){
+  const aliases=r.aliases||[r.flight],key=[r.date,r.airport,r.type,r.scheduled,r.origin,r.destination,r.operator||'',...aliases.slice().sort()].join('|');
+  if(physical.has(key))continue;physical.add(key);
+  const time=r.date+' '+r.scheduled;
+  if(!groups.has(time))groups.set(time,[]);groups.get(time).push(r);
+ }
+ for(const rs of groups.values()){
+  const delta=deltaMinutes(rs[0],date,base),items=rs.map(r=>{
+   const aliases=r.aliases||[r.flight],selected=aliases.includes(chosen),other=type==='DEP'?r.destination:r.origin;
+   const shown=selected?chosen:(aliases.find(x=>r.operator&&x.startsWith(r.operator))||r.flight);
+   let value='<span class="'+(selected?'own':shown.startsWith('JAL')?'jal':shown.startsWith('ANA')?'ana':'')+'">'+(selected?'◆ ':'')+esc(shown)+' - '+esc(other)+'</span>';
+   if(aliases.length>1)value+=' <small title="'+esc(aliases.join(' / '))+'">共同</small>';
+   if(r.estimated)value+=' <span class="late">予 '+esc(r.estimated)+'</span>';
+   if(r.note)value+='<details class="flightnote"><summary>注記</summary>'+esc(r.note)+'</details>';
+   return value;
+  });
+  h+='<tr'+(delta===0?' class="target"':'')+'><td>'+esc(rs[0].scheduled)+(rs[0].date!==date?'<small>'+esc(rs[0].date.slice(5))+'</small>':'')+'</td><td>'+esc(delta===0?'0':(delta>0?'+':'')+delta)+'</td><td>'+items.join(' / ')+'</td></tr>';
+ }
+ if(!rr.length)h+='<tr><td colspan="3" class="muted">この時間帯の収録便なし（未提供便は含みません）</td></tr>';
+ return h+'</tbody></table></div>';
+}
+function coverage(){
+ if(!odptMeta){$('coverage').textContent='データ：'+source;return;}
+ let s='データ：'+source+' / 対象 '+odptMeta.date+' / 取得 '+showTime(odptMeta.fetchedAt)+' JST / 提供元・運航社：'+(odptMeta.operators.join('・')||'なし')+'。ODPT未提供の便は表示できません。';
+ if(odptMeta.updates.length)s+=' 元データ更新 '+showTime(odptMeta.updates[0])+' - '+showTime(odptMeta.updates[odptMeta.updates.length-1])+'。';
+ if(odptMeta.unknownCalendars.length)s+=' 判定できない運航日を除外：'+odptMeta.unknownCalendars.join('・')+'。';
+ if(odptMeta.skipped)s+=' 時刻等を判定できないレコードあり。';
+ $('coverage').textContent=s;
+}
+function render(){const date=$('date').value,flight=normalizeFlight($('flight').value),range=Number($('range').value);coverage();if(!flight){$('results').innerHTML='<div class="panel note">日付と便名を入力してください。</div>';return}const matches=data.filter(r=>r.date===date&&r.flight===flight);let dep=matches.find(r=>r.type==='DEP'),arr=matches.find(r=>r.type==='ARR');if(dep){arr=data.find(r=>r.type==='ARR'&&r.flight===flight&&r.origin===dep.origin&&r.destination===dep.destination&&r.date===(dep.arrivalDate||date))||arr;}if(!dep&&!arr){$('results').innerHTML='<div class="panel note">'+esc(flight)+' は、この日の登録時刻表にありません。ODPTから取得するか、対象日のCSVを読み込んでください。未提供便は検索できません。</div>';$('status').textContent='データ：'+source+' / '+data.length+'件';return}
 if(!dep&&arr&&arr.origin){dep=data.find(r=>r.date===date&&r.flight===flight&&r.type==='DEP'&&r.airport===arr.origin)}if(!arr&&dep&&dep.destination){arr=data.find(r=>r.date===date&&r.flight===flight&&r.type==='ARR'&&r.airport===dep.destination)}
 const depAirport=dep?.airport||arr?.origin,arrAirport=arr?.airport||dep?.destination,depTime=dep?min(dep.scheduled):null,arrTime=arr?min(arr.scheduled):null;
 let out='<section class="panel"><h2>'+esc(flight)+' / '+esc(date)+'　'+esc(depAirport||'?')+' '+esc(dep?.scheduled||'—')+' → '+esc(arrAirport||'?')+' '+esc(arr?.scheduled||'—')+'</h2><div class="note">定刻順。各空港は指定便のその空港での出発／到着定刻を基準に、前後'+range+'分を表示。</div></section>';
 if(depAirport&&depTime!==null){out+='<section class="panel"><h2>出発空港 '+esc(airportMaster[depAirport]||depAirport)+'</h2><div class="trafficgrid">'+table(depAirport,'DEP',depTime,date,range,flight)+table(depAirport,'ARR',depTime,date,range,flight)+'</div></section>'}else out+='<div class="panel note">出発便の定刻がありません。出発側の表示には出発レコードが必要です。</div>';
-if(arrAirport&&arrTime!==null){out+='<section class="panel"><h2>到着空港 '+esc(airportMaster[arrAirport]||arrAirport)+'</h2><div class="trafficgrid">'+table(arrAirport,'ARR',arrTime,date,range,flight)+table(arrAirport,'DEP',arrTime,date,range,flight)+'</div></section>'}else out+='<div class="panel note">到着便の定刻がありません。到着側の表示には到着レコードが必要です。</div>';
-for(const ap of [depAirport,arrAirport]){const pair=pairs[ap];const anchor=ap===depAirport?depTime:arrTime;if(pair&&anchor!==null){out+='<section class="panel"><h2>周辺空港 '+esc(airportMaster[pair]||pair)+'</h2><div class="trafficgrid">'+table(pair,'ARR',anchor,date,range,flight)+table(pair,'DEP',anchor,date,range,flight)+'</div></section>'}}
+if(arrAirport&&arrTime!==null){out+='<section class="panel"><h2>到着空港 '+esc(airportMaster[arrAirport]||arrAirport)+'</h2><div class="trafficgrid">'+table(arrAirport,'DEP',arrTime,arr.date,range,flight)+table(arrAirport,'ARR',arrTime,arr.date,range,flight)+'</div></section>'}else out+='<div class="panel note">到着便の定刻がありません。到着側の表示には到着レコードが必要です。</div>';
+for(const ap of [depAirport,arrAirport]){const pair=pairs[ap];const anchor=ap===depAirport?depTime:arrTime;const anchorDate=ap===depAirport?(dep?.date||date):(arr?.date||date);if(pair&&anchor!==null){out+='<section class="panel"><h2>周辺空港 '+esc(airportMaster[pair]||pair)+'</h2><div class="trafficgrid">'+table(pair,'DEP',anchor,anchorDate,range,flight)+table(pair,'ARR',anchor,anchorDate,range,flight)+'</div></section>'}}
 $('results').innerHTML=out;$('status').textContent='データ：'+source+' / '+data.length+'件 / JST';}
-$('date').value=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());$('search').onclick=render;$('print').onclick=()=>print();
-$('file').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;const t=await f.text(),rr=parse(t);if(!rr.length)throw Error('有効なデータがありません');localStorage.setItem(KEY,t);data=rr;source='端末保存CSV: '+f.name;render();}catch(err){alert('CSV読み込み失敗: '+err.message);}};
-$('clear').onclick=()=>{if(!confirm('端末保存CSVを削除しますか？'))return;localStorage.removeItem(KEY);data=[];source='未読み込み';render();};
-(async()=>{try{const saved=localStorage.getItem(KEY);if(saved){data=parse(saved);source='端末保存CSV';}else{const res=await fetch('./traffic-data.csv',{cache:'no-store'});if(res.ok){data=parse(await res.text());source='GitHub公開CSV';}}}catch(e){source='未読み込み';}render();})();
+$('date').value=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());$('search').onclick=async()=>{if(busy)return;if($('odptToken').value.trim()&&(!odptRaw||Date.now()-odptFetchedAt>120000)){await fetchODPT();return;}if(odptRaw){try{applyODPT(odptRaw);}catch(e){$('odptStatus').textContent=e.message;return;}}render();};$('print').onclick=()=>print();
+$('file').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;const t=await f.text(),rr=parse(t);if(!rr.length)throw Error('有効なデータがありません');localSet(KEY,t);odptMeta=null;odptRaw=null;data=rr;source='端末保存CSV: '+f.name;render();}catch(err){alert('CSV読み込み失敗: '+err.message);}};
+$('clear').onclick=()=>{if(!confirm('端末保存CSVを削除しますか？'))return;localRemove(KEY);localRemove(ODPT_CACHE);odptMeta=null;odptRaw=null;data=[];source='未読み込み';render();};
+function applyODPT(raw){
+ const result=ODPTTraffic.normalize(raw,$('date').value);
+ if(!result.rows.some(r=>r.date===$('date').value))throw Error('この日の有効な国内線時刻表がありません。対象日・配信期間・データ利用権限を確認してください。');
+ result.meta.fetchedAt=new Date(odptFetchedAt).toISOString();
+ data=result.rows;odptMeta=result.meta;source='ODPT取得時刻表';
+ const saved=localSet(ODPT_CACHE,JSON.stringify(result));
+ return saved;
+}
+async function fetchODPT(){
+ if(busy)return;
+ if(!ODPTTraffic.validDate($('date').value)){$('odptStatus').textContent='先に対象日を指定してください。';return;}
+ const token=$('odptToken').value.trim();
+ if(!token){$('odptStatus').textContent='アクセストークンを入力してください。';$('odptToken').focus();return;}
+ if($('rememberToken').checked){if(!localSet(TOKEN_KEY,token)){$('odptStatus').textContent='トークンを保存できません。今回の接続だけに使用します。';}}
+ else localRemove(TOKEN_KEY);
+ busy=true;$('odptFetch').disabled=true;$('search').disabled=true;$('date').disabled=true;$('file').disabled=true;
+ $('odptStatus').textContent='ODPTの時刻表を取得中です…';
+ try{
+  const raw=await ODPTTraffic.download(token);const fetched=Date.now(),previous=odptFetchedAt;odptFetchedAt=fetched;
+  let saved;try{saved=applyODPT(raw);}catch(e){odptFetchedAt=previous;throw e;}
+  odptRaw=raw;
+  $('odptStatus').textContent='取得完了。'+$('date').value+'の発着レコード '+data.filter(r=>r.date===$('date').value).length+'件。'+(saved?'時刻表は端末にも保存しました。':'端末保存できなかったため、この画面を開いている間だけ使えます。');
+  render();
+ }catch(e){$('odptStatus').textContent='取得失敗：'+e.message+' 入力したトークンは画面に表示しません。';}
+ finally{busy=false;$('odptFetch').disabled=false;$('search').disabled=false;$('date').disabled=false;$('file').disabled=false;}
+}
+$('odptFetch').onclick=fetchODPT;
+$('rememberToken').onchange=()=>{if(!$('rememberToken').checked)localRemove(TOKEN_KEY);};
+$('forgetToken').onclick=()=>{localRemove(TOKEN_KEY);$('odptToken').value='';$('rememberToken').checked=false;$('odptStatus').textContent='保存トークンと入力欄を消去しました。時刻表は残しています。';};
+$('flight').addEventListener('keydown',e=>{if(e.key==='Enter')$('search').click();});
+(async()=>{
+ const token=localGet(TOKEN_KEY);if(token){$('odptToken').value=token;$('rememberToken').checked=true;}
+ try{
+  const cached=localGet(ODPT_CACHE),saved=localGet(KEY);
+  if(cached){const result=JSON.parse(cached);if(Array.isArray(result.rows)&&result.meta&&result.meta.fetchedAt){data=result.rows;odptMeta=result.meta;source='端末保存ODPT（未更新）';}}
+  if(!data.length&&saved){data=parse(saved);source='端末保存CSV';}
+  if(!data.length){const res=await fetch('./traffic-data.csv',{cache:'no-store'});if(res.ok){data=parse(await res.text());source='公開CSV';}}
+ }catch(e){source=data.length?source:'未読み込み';}
+ render();
+})();
 </script></body></html>
